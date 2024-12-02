@@ -1,3 +1,6 @@
+# unneeded meta data files which are added for every VVZ pdf
+**/*Zone.Identifier
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
