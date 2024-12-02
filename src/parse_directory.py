@@ -7,7 +7,7 @@ def parse_and_create_directories(folder=""):
     csv_dir = "data/csv/"
     write_dirs = [text_dir, csv_dir]
 
-    # directory
+    # directories in the source_dir
     dirs = next(os.walk(source_dir))[1]
     create_subdirectories(write_dirs, dirs)
 

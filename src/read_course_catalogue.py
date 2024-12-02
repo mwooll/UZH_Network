@@ -1,15 +1,32 @@
+import os
+
 from pypdf import PdfReader
 
+def write_pdf_to_text(file_path):
+    reader = PdfReader(file_path)
 
-file_name = "data/source/HS24/VVZ_HS24_modules.pdf"
-reader = PdfReader(file_name)
-print(f"reader for {file_name} is ready")
+    output_file = file_path.replace({"source": "text", ".pdf": ".txt"})
+    print(output_file)
+    
+    with open(output_file, "w+") as file_to_write:
+        for page in reader.pages:
+            page_content = page.extract_text()
+            file_to_write.write(page_content + "\n")
 
-text = ""
-for page in reader.pages:
-    text += page.extract_text() + "\n"
+    return output_file
 
-txt_file = "data/text/HS24/VVZ_HS24_modules.txt"
-with open(txt_file, "w+") as file_to_write:
-    file_to_write.write(text)
-print(f"{file_name} was read and written to {txt_file}")
+
+def convert_pdfs_to_txt(): 
+    source_dir = "data/source"
+    
+    files_written = []
+    for path, dirs, files in os.walk(source_dir):
+        for file in files:
+            filename = path + "/" + file
+            out = write_pdf_to_text(filename)
+            files_written.append(out)
+    return files_written
+
+if __name__ == "__main__":
+    written_files = convert_pdfs_to_txt()
+    print(written_files)
