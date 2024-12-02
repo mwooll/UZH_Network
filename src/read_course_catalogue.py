@@ -3,17 +3,18 @@ import os
 from pypdf import PdfReader
 
 def write_pdf_to_text(file_path):
+    output_file = file_path.replace("source", "text").replace(".pdf", ".txt")
+    print(output_file)
+    if os.path.isfile(output_file):
+        return None
+
     print(f"reading: {file_path}")
     reader = PdfReader(file_path)
 
-    output_file = file_path.translate({"source": "text", ".pdf": ".txt"})
-
-    # skip files which already exist
-    if not os.path.isfile(output_file):
-        with open(output_file, "w+") as file_to_write:
-            for page in reader.pages:
-                page_content = page.extract_text()
-                file_to_write.write(page_content + "\n")
+    with open(output_file, "w+") as file_to_write:
+        for page in reader.pages:
+            page_content = page.extract_text()
+            file_to_write.write(page_content + "\n")
 
     return output_file
 
@@ -29,6 +30,7 @@ def convert_pdfs_to_txt():
 
             filename = path + "/" + file
             out = write_pdf_to_text(filename)
+            # if out:
             new_files.append(out)
     return new_files
 
