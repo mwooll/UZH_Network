@@ -1,5 +1,6 @@
 from pypdf import PdfReader
 
+
 file_name = "data/source/HS24/VVZ_HS24_modules.pdf"
 reader = PdfReader(file_name)
 print(f"reader for {file_name} is ready")
