@@ -1,9 +1,7 @@
 import os
 
 
-def prepare_directories(folder=""):
-    source_dir = "data/source/" + folder
-    
+def prepare_directories(source_dir):    
     # deleting hidden "[].pdf.Zone.Identifier" files
     files_removed = []
     for path, dirs, files in os.walk(source_dir):
@@ -35,5 +33,6 @@ def create_subdirectories(folders, sub_dirs):
     return new_folders
 
 if __name__ == "__main__":
-    out = prepare_directories()
+    source_dir = "data/source/"
+    out = prepare_directories(source_dir)
     print(out)
