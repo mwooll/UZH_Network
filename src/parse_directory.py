@@ -1,5 +1,15 @@
 import os
 
+def rename_files(source_dir):
+    files_renamed = {}
+    for path, dirs, files in os.walk(source_dir):
+        for file in files:
+            if "courses" in file:
+                new_name = file.replace("courses", "time_schedules")
+                os.renames(path + "/" + file, path + "/" + new_name)
+                files_renamed[file] = new_name
+    return files_renamed
+                
 
 def prepare_directories(source_dir):    
     # deleting hidden "[].pdf.Zone.Identifier" files
@@ -34,5 +44,5 @@ def create_subdirectories(folders, sub_dirs):
 
 if __name__ == "__main__":
     source_dir = "data/source/"
-    out = prepare_directories(source_dir)
+    out = rename_files(source_dir)
     print(out)
