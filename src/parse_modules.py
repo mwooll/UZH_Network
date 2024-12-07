@@ -3,8 +3,15 @@ import csv
 from pathlib import Path
 
 # possible header for final csv
-csv_header = ["Name", "Number", "Type", "ECTS", "Language", "Responsible instructor",
+csv_header = ["Name", "Faculty", "Number", "Type", "ECTS", "Language", "Responsible instructor",
               "Prerequisites", "Prior Knowledge", "Component"]
+
+# dictionairy with known faculties
+faculties = {"01SM": "THF", "02SM": "RWF", "03SM": "WWF", "04SM": "MEF",
+             "05SM": "VSF", "06SM": "PHF", "07SM": "MNF",
+             "10SM": "Transdisciplinary Studies", "30SM": "Sprachkurs",
+             # from now on: huh?
+             "00UF": "",  "05DP": "", "04VL": "", "10_1": ""}
 
 def parse_modules(txt_dir):
     new_files = []
@@ -29,9 +36,10 @@ def convert_txt_to_csv(txt_file, csv_file):
     # a new module always starts with "Page 1", the very first entry is empty
     modules = text.split("Page 1")[1:]
 
-    data = extract_fields_from_modules(modules[:1])
+    data = extract_fields_from_modules(modules)
 
-    with open(csv_file, mode="w", newline="", encoding="utf-8") as file:
+    # need utf-16 for "üöä" not included in utf-8
+    with open(csv_file, mode="w", newline="", encoding="utf-16") as file:
         writer = csv.DictWriter(file, fieldnames=csv_header)
         writer.writeheader()
         writer.writerows(data)
@@ -42,21 +50,26 @@ def extract_fields_from_modules(modules):
     for module in modules:
         module_info = {}
 
-        ################
-        # remove later, but speeds up computation while working on it
-        offered = module.find("Offered in:")
-        if offered > 0:
-            module = module[:offered]
-        print(module)
-        ################
-
         lines = module.split("\n")
 
-        # one liners
-        module_info["Name"] = lines[4][7:]
+        # find name of module
+        for index, line in enumerate(lines):
+            if line[:7] == "Module ":
+                module_info["Name"] = line[7:]
+                break
 
+        # if we find no name, we can't continue
+        if "Name" not in module_info:
+            continue
 
-        lines = lines[5:]
+        # can ignore if more than 2 values are returned from the split
+        module_number, module_type = lines[index+1].split(" / ")[:2]
+        lines = lines[index+2:]
+
+        faculty, number = module_number[:4], module_number[4:]
+        module_info["Faculty"] = faculties[faculty]
+        module_info["Number"] = number
+        module_info["Type"] = module_type
 
         # needs to be ordered as occurring in file
         simple_fields = ["ECTS", "Responsible instructor"]
@@ -74,7 +87,7 @@ def extract_fields_from_modules(modules):
                 module_info["Prerequisites"] = prerequisites
                 break
 
-        print(module_info)
+        # print(module_info)
         if module_info:  
             results.append(module_info)
         
