@@ -14,7 +14,8 @@ faculties = {"01SM": "THF", "02SM": "RWF", "03SM": "WWF", "04SM": "MEF",
              "05SM": "VSF", "06SM": "PHF", "07SM": "MNF",
              "10SM": "Transdisciplinary Studies", "30SM": "Sprachkurs",
              # what are those?
-             "00UF": "",  "05DP": "", "04VL": "", "10_1": ""}
+             "00UF": "", "04VL": "", "04ZR": "", "05DP": "",
+             "060S": "", "07VU": "", "10_1": ""}
 
 def parse_modules(txt_dir):
     new_files = []
@@ -62,7 +63,7 @@ def extract_fields_from_modules(modules):
                 module_info["Name"] = line[7:]
                 break
 
-        # if we find no name, we can't continue
+        # if we found no name, we can't continue
         if "Name" not in module_info:
             continue
 
@@ -81,8 +82,8 @@ def extract_fields_from_modules(modules):
                          "Booking Deadline/Period", "Cancellation Deadline"]
         lines, module_info = find_one_line_fields(lines, simple_fields, module_info)
 
-        module_info = get_requirements(module, module_info)
-        module_info = get_components(module, module_info)
+        get_requirements(module, module_info)
+        get_components(module, module_info)
 
         # print(module_info)
         if module_info:  
@@ -114,12 +115,11 @@ def get_requirements(module, module_info):
             module_info["Prerequisites"] = prerequisites
             break
 
-    return module_info
 
 def get_components(module, module_info):
     pass
 
 if __name__ == "__main__":
-    txt_directory = "data/text/HS24/"
+    txt_directory = "data/text"
     new = parse_modules(txt_directory)
     print(new)
