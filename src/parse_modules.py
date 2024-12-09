@@ -3,14 +3,17 @@ import csv
 from pathlib import Path
 
 # possible header for final csv
-csv_header = ["Name", "Faculty", "Number", "Type", "ECTS", "Language", "Responsible instructor",
-              "Prerequisites", "Prior Knowledge", "Component"]
+csv_header = ["Name", "Faculty", "Number", "Type", "ECTS", "Language",
+              "Responsible instructor", "Prerequisites", "Prior Knowledge",
+              "Assessment", "Grading Scale", "Repeatability", "Offer pattern",
+              "Booking Deadline/Period", "Cancellation Deadline",
+              "Component"]
 
 # dictionairy with known faculties
 faculties = {"01SM": "THF", "02SM": "RWF", "03SM": "WWF", "04SM": "MEF",
              "05SM": "VSF", "06SM": "PHF", "07SM": "MNF",
              "10SM": "Transdisciplinary Studies", "30SM": "Sprachkurs",
-             # from now on: huh?
+             # what are those?
              "00UF": "",  "05DP": "", "04VL": "", "10_1": ""}
 
 def parse_modules(txt_dir):
@@ -36,7 +39,7 @@ def convert_txt_to_csv(txt_file, csv_file):
     # a new module always starts with "Page 1", the very first entry is empty
     modules = text.split("Page 1")[1:]
 
-    data = extract_fields_from_modules(modules)
+    data = extract_fields_from_modules(modules[:1])
 
     # need utf-16 for "üöä" not included in utf-8
     with open(csv_file, mode="w", newline="", encoding="utf-16") as file:
@@ -48,6 +51,7 @@ def extract_fields_from_modules(modules):
     results = []
 
     for module in modules:
+        print(module)
         module_info = {}
 
         lines = module.split("\n")
@@ -72,22 +76,16 @@ def extract_fields_from_modules(modules):
         module_info["Type"] = module_type
 
         # needs to be ordered as occurring in file
-        simple_fields = ["ECTS", "Responsible instructor"]
+        simple_fields = ["ECTS", "Responsible instructor", "Assessment",
+                         "Grading Scale", "Repeatability", "Offer pattern",
+                         "Booking Deadline/Period", "Cancellation Deadline"]
         lines, module_info = find_one_line_fields(lines, simple_fields, module_info)
-    
-        for line in lines:
-            if "Prerequisites:" in line:
-                prerequisites = line.split("Prerequisites:")[-1].strip()
-                stop_keywords = ["Assessment:", "Grading Scale:", "Repeatability:", "Organisation:"]
-                for keyword in stop_keywords:
-                    if keyword in prerequisites:
-                        prerequisites = prerequisites.split(keyword)[0].strip()
-                        break
-                
-                module_info["Prerequisites"] = prerequisites
-                break
 
-        # print(module_info)
+        splitted = modules.split("\n")
+        module_info = get_requirements(module, module_info)
+        module_info = get_components(module, module_info)
+
+        print(module_info)
         if module_info:  
             results.append(module_info)
         
@@ -100,10 +98,27 @@ def find_one_line_fields(lines, keywords, module_info):
             if line[:length] == word:
                 # ignore ": "
                 module_info[word] = line[length+2:]
+                lines = lines[index:]
                 break
-        lines = lines[index:]
     return lines, module_info
 
+def get_requirements(module, module_info, lines):
+    for line in lines:
+        if "Prerequisites:" in line:
+            prerequisites = line.split("Prerequisites:")[-1].strip()
+            stop_keywords = ["Assessment:", "Grading Scale:", "Repeatability:", "Organisation:"]
+            for keyword in stop_keywords:
+                if keyword in prerequisites:
+                    prerequisites = prerequisites.split(keyword)[0].strip()
+                    break
+                
+            module_info["Prerequisites"] = prerequisites
+            break
+
+    return module_info
+
+def get_components(module):
+    pass
 
 if __name__ == "__main__":
     txt_directory = "data/text/HS24/"
