@@ -39,7 +39,7 @@ def convert_txt_to_csv(txt_file, csv_file):
     # a new module always starts with "Page 1", the very first entry is empty
     modules = text.split("Page 1")[1:]
 
-    data = extract_fields_from_modules(modules[:1])
+    data = extract_fields_from_modules(modules)
 
     # need utf-16 for "üöä" not included in utf-8
     with open(csv_file, mode="w", newline="", encoding="utf-16") as file:
@@ -51,7 +51,7 @@ def extract_fields_from_modules(modules):
     results = []
 
     for module in modules:
-        print(module)
+        # print(module)
         module_info = {}
 
         lines = module.split("\n")
@@ -81,11 +81,10 @@ def extract_fields_from_modules(modules):
                          "Booking Deadline/Period", "Cancellation Deadline"]
         lines, module_info = find_one_line_fields(lines, simple_fields, module_info)
 
-        splitted = modules.split("\n")
         module_info = get_requirements(module, module_info)
         module_info = get_components(module, module_info)
 
-        print(module_info)
+        # print(module_info)
         if module_info:  
             results.append(module_info)
         
@@ -102,8 +101,8 @@ def find_one_line_fields(lines, keywords, module_info):
                 break
     return lines, module_info
 
-def get_requirements(module, module_info, lines):
-    for line in lines:
+def get_requirements(module, module_info):
+    for line in module.split("\n"):
         if "Prerequisites:" in line:
             prerequisites = line.split("Prerequisites:")[-1].strip()
             stop_keywords = ["Assessment:", "Grading Scale:", "Repeatability:", "Organisation:"]
@@ -117,7 +116,7 @@ def get_requirements(module, module_info, lines):
 
     return module_info
 
-def get_components(module):
+def get_components(module, module_info):
     pass
 
 if __name__ == "__main__":
