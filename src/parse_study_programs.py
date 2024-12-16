@@ -136,15 +136,15 @@ def get_semester_name(file_path):
 
 
 def save_data_csv(semester_name, df_result):
-    csv_dir = f"../data/csv/{semester_name}"
+    csv_dir = f"data/csv/{semester_name}"
     os.makedirs(csv_dir, exist_ok=True)  
     csv_path = os.path.join(csv_dir, f"VVZ_{semester_name}_study_programs.csv")
-    df_result.to_csv(csv_path, index=False)
+    df_result.to_csv(csv_path, index=False, encoding="utf-16")
     
 if __name__=="__main__":
     file_paths = ["data/text/FS24/VVZ_FS24_study_programs.txt", "data/text/FS23/VVZ_FS23_study_programs.txt", "data/text/HS23/VVZ_HS23_study_programs.txt"]
     for file_path in file_paths:
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, "r", encoding="utf-8", newline="") as file:
             file_content = file.read()
         df_result = process_course_catalogs(file_content)
         semester_name = get_semester_name(file_path)
