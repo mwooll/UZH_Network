@@ -1,86 +1,160 @@
-file_path = "data/text/HS24/VVZ_HS24_study_programs.txt"
 
-with open(file_path, "r", encoding="utf-8") as file:
-    content = file.read()
-
-print(content)
 
 
 
 import re
 import pandas as pd
 
-# split stuff based on "Link:" there are 693 in total same as other keywords like ""Coordination:""
-catalogs = re.split(r"\nLink:\s*\n", content)
 
 
-course_data = []
+def process_hs24_study_programs(content):
+    # Split the content based on "Course Catalog  "
+    catalogs = re.split(r"Course Catalog\s+", content)
 
-for catalog in catalogs[1:]:
-    catalog = catalog.strip()  
-    if catalog:  
-        # Extract the line after "Link:"
-        program = re.search(r"^([^\n]+)", catalog)  # Capture the first line after "Link:"
-        program = program.group(1).strip() if program else None
+    # Initialize a list to store extracted data
+    course_data = []
 
-        # NOT NEEDED
-        description = re.search(r"General description:\s*\n(.+?)(?:\nRequirements:)", catalog, re.DOTALL)
-        description = description.group(1).strip().replace("\n", " ") if description else None
+    # Process each catalog (skip the first empty split if present)
+    for catalog in catalogs[1:]:
+        catalog = catalog.strip()  
+        if catalog:  
+            # Extract the program name
+            program = re.search(r"Link:\s*(.+)", catalog)
+            program = program.group(1).strip() if program else None
 
-        admission = re.search(r"Admission Requirements:\s*\n(.+?)(?:\nParticulars/Requirements:)", catalog, re.DOTALL)
-        admission = admission.group(1).strip().replace("\n", " ") if admission else None
-        
-        particulars = re.search(r"Particulars/Requirements:\s*\n(.+?)(?:\nRegulations:)", catalog, re.DOTALL)
-        particulars = particulars.group(1).strip().replace("\n", " ") if particulars else None
+            # Extract Languages of Instruction
+            languages = re.search(r"Languages of Instruction:\s*(.+)", catalog)
+            languages = languages.group(1).strip() if languages else None
+
+            # Extract Regulations (URLs starting with http or https)
+            regulations = re.search(r"Regulations:\s*(https?://\S+)", catalog)
+            regulations = regulations.group(1).strip() if regulations else None
+
+            # Extract Organization information
+            organization = re.search(r"Organization: (.*)", catalog)
+            organization = organization.group(1).strip() if organization else None
+            organization = organization if len(organization) > 1 else None
+
+            # Extract Responsible Instructor
+            responsible = re.search(r"Responsible Instructor: (.*)", catalog)
+            responsible = responsible.group(1).strip() if responsible else None
+            responsible = responsible if len(responsible) > 1 else None
+
+            # Extract Coordination details
+            coordination = re.search(r"Coordination: (.*)", catalog)
+            coordination = coordination.group(1).strip() if coordination else None
+            coordination = coordination if len(coordination) > 1 else None
+
+            # Extract "Part Of" section
+            part_of = re.findall(r"Part of:\s*\n(.+?)(?=\nPage \d+ of \d+|$)", catalog, re.DOTALL)
+            part_of = part_of[0].strip().replace("\n", "; ") if part_of else None
+
+            # Append the extracted details as a dictionary
+            course_data.append({
+                "Program": program,
+                "Languages": languages,
+                "Regulations": regulations,
+                "Organization": organization,
+                "Responsible Instructor": responsible,
+                "Coordination": coordination,
+                "Part Of": part_of
+            })
+
+   
+    df_result = pd.DataFrame(course_data)
+    
+    df_result['Part Of'] = df_result['Part Of'].apply(lambda x: ";".join([part.strip() for part in x.split(";") if "Page " not in part]) if pd.notnull(x) else x)
+
+    
+    return df_result
 
 
-        # can be multiple languages "Spanish, Portoguese" separated by comma
-        languages = re.search(r"Languages of Instruction:\s*(.+)", catalog)
-        languages = languages.group(1).strip() if languages else None
 
-        # can be either https or http
-        regulations = re.search(r"Regulations:\s*(https?://\S+)", catalog)
-        regulations = regulations.group(1).strip() if regulations else None
+import pandas as pd
+import re
 
-        # there is a "Organization:" header without anything after it so make " " space to get the second one
-        organization = re.search(r"Organization: (.*)", catalog)
-        organization = organization.group(1).strip() if organization else None
-        organization = organization if len(organization) >1 else None
-        # ": " space to be sure, on the same line
-        responsible = re.search(r"Responsible Instructor: (.*)", catalog)
-        responsible = responsible.group(1).strip() if responsible else None
-        responsible = responsible if len(responsible) >1 else None
-        # on the same line
-        coordination = re.search(r"Coordination: (.*)", catalog)
-        coordination = coordination.group(1).strip() if coordination else None
-        coordination = coordination if len(coordination) >1 else None
-        #  Part Of: All lines after it, until we reach "course Catalog" ignore Page 1 of 1
-        part_of = re.findall(r"Part of:\s*\n(.+?)(?=\nPage \d+ of \d+|$)", catalog, re.DOTALL)
-        part_of = part_of[0].strip().replace("\n", "; ") if part_of else None
+def process_course_catalogs(file_content):
+    catalogs = re.split(r"Course Catalog\s+", file_content)
+    course_data = []
+    
+    # Process each catalog (skip the first empty split if present)
+    for catalog in catalogs[1:]:
+        catalog = catalog.strip()
+        if catalog:
+            # Extract the line after "Printing date" as the program name
+            program_match = re.search(r"Printing date:\s*[^\n]*\n(.+)", catalog)
+            program = program_match.group(1).strip() if program_match else None
 
-        # make dic
-        course_data.append({
-            "Program": program,
-            # "General Description": description,
-            "Languages": languages,
-            # "Admission Requirements": admission,
-            # "Particular Requirements": particulars,
-            "Regulations": regulations,
-            "Organization": organization,
-            "Responsible Instructor": responsible,
-            "Coordination": coordination,
-            "Part Of": part_of
-        })
+            # Extract Languages of Instruction
+            languages = re.search(r"Languages of Instruction: +([^\n]*)", catalog)
+            languages = languages.group(1).strip() if languages else None
+
+            # Extract Regulations (URLs starting with http or https)
+            regulations = re.search(r"Regulations:\s*(https?://\S+)", catalog)
+            regulations = regulations.group(1).strip() if regulations else None
+
+            # Extract Organization information
+            organization = re.search(r"Organization: (.*)", catalog)
+            organization = organization.group(1).strip() if organization else None
+            organization = organization if len(organization) > 1 else None
+
+            # Extract Responsible Instructor
+            responsible = re.search(r"Responsible Instructor: (.*)", catalog)
+            responsible = responsible.group(1).strip() if responsible else None
+            responsible = responsible if len(responsible) > 1 else None
+
+            # Extract Coordination details
+            coordination = re.search(r"Coordination: (.*)", catalog)
+            coordination = coordination.group(1).strip() if coordination else None
+            coordination = coordination if len(coordination) > 1 else None
+
+            # Extract "Part Of" section
+            part_of = re.findall(r"Part of:\s*\n(.+?)(?=\nPage \d+ of \d+|$)", catalog, re.DOTALL)
+            part_of = part_of[0].strip().replace("\n", "; ") if part_of else None
+
+      
+            course_data.append({
+                "Program": program,
+                "Languages": languages,
+                "Regulations": regulations,
+                "Organization": organization,
+                "Responsible Instructor": responsible,
+                "Coordination": coordination,
+                "Part Of": part_of
+            })
+    df_result = pd.DataFrame(course_data)
+    df_result['Part Of'] = df_result['Part Of'].apply(lambda x: ";".join([part.strip() for part in x.split(";") if "Page " not in part]) if pd.notnull(x) else x)
+    return df_result
 
 
-df = pd.DataFrame(course_data)
-# df.to_csv("../data/csv/VZZ_HS24_study_programs.csv", index=False)
+import os
 
-# expected number of rows
-num_rows = len(df)
-if num_rows == 693:
-    print(f"Success! The dataset contains the expected 693 rows.")
-else:
-    print(f"Warning: The dataset contains {num_rows} rows instead of 693.")
 
-print("Processed data saved to 'course_catalog.csv'")
+def get_semester_name(file_path):
+    return os.path.basename(file_path).split("_")[1]
+
+
+
+def save_data_csv(semester_name, df_result):
+    csv_dir = f"../data/csv/{semester_name}"
+    os.makedirs(csv_dir, exist_ok=True)  
+    csv_path = os.path.join(csv_dir, f"VVZ_{semester_name}_study_programs.csv")
+    df_result.to_csv(csv_path, index=False)
+    
+if __name__=="__main__":
+    file_paths = ["data/text/FS24/VVZ_FS24_study_programs.txt", "data/text/FS23/VVZ_FS23_study_programs.txt", "data/text/HS23/VVZ_HS23_study_programs.txt"]
+    for file_path in file_paths:
+        with open(file_path, "r", encoding="utf-8") as file:
+            file_content = file.read()
+        df_result = process_course_catalogs(file_content)
+        semester_name = get_semester_name(file_path)
+        save_data_csv(semester_name, df_result)
+ 
+    file_path = "data/text/HS24/VVZ_HS24_study_programs.txt"
+
+    with open(file_path, "r", encoding="utf-8") as file:
+        content = file.read()
+        df_result = process_hs24_study_programs(content)
+        semester_name = get_semester_name(file_path)
+        save_data_csv(semester_name, df_result)
+    
