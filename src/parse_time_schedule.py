@@ -59,3 +59,5 @@ for semester in semesters:
     input_file = f"data/text/{semester}/VVZ_{semester}_time_schedules.txt"  
     output_file = f"data/csv/{semester}/VZZ_{semester}_time_schedule.csv"  
     main(input_file, output_file)
+
+# hello world
