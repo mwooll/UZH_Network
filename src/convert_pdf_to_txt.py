@@ -4,8 +4,8 @@ from pypdf import PdfReader
 
 def write_pdf_to_text(file_path):
     output_file = file_path.replace("source", "text").replace(".pdf", ".txt")
-    if os.path.isfile(output_file):
-        return
+    # if os.path.isfile(output_file):
+    #     return
 
     print(f"reading: {file_path}; will write to {output_file}")
     reader = PdfReader(file_path)
@@ -33,6 +33,6 @@ def convert_pdfs_to_txt(source_dir):
 
 
 if __name__ == "__main__":
-    source_dir = "data/source"
+    source_dir = "../ns_data_source"
     new_files = convert_pdfs_to_txt(source_dir)
     print(new_files)
