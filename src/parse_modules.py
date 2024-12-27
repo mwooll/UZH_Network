@@ -1,18 +1,18 @@
-import os
 import csv
+import os
 from pathlib import Path
+import re
 
 # possible header for final csv
-csv_header = ["Name", "Faculty", "Number", "Type", "ECTS", "Language",
+csv_header = ["Name", "Faculty", "Number", "Type", "ECTS",
               "Responsible instructor", "Prerequisites", "Prior Knowledge",
               "Assessment", "Grading Scale", "Repeatability", "Offer pattern",
-              "Booking Deadline/Period", "Cancellation Deadline",
-              "Component"]
+              "Booking Deadline/Period", "Cancellation Deadline"]
 
 # dictionairy with known faculties
 faculties = {"01SM": "THF", "02SM": "RWF", "03SM": "WWF", "04SM": "MEF",
              "05SM": "VSF", "06SM": "PHF", "07SM": "MNF",
-             "10SM": "Transdisciplinary Studies", "30SM": "Sprachkurs",
+             "10SM": "Transdisciplinary Studies", "30SM": "Language Courses",
              # what are those?
              "00UF": "", "04VL": "", "04ZR": "", "05DP": "",
              "060S": "", "07VU": "", "10_1": ""}
@@ -37,8 +37,8 @@ def parse_modules(txt_dir):
 def convert_txt_to_csv(txt_file, csv_file):
     text = Path(txt_file).read_text()
 
-    # a new module always starts with "Page 1", the very first entry is empty
-    modules = text.split("Page 1")[1:]
+    # a new module always starts with "Course Catalog Fall Semester 2024", the very first entry is empty
+    modules = text.split("Course Catalog Fall Semester 2024")[1:]
 
     data = extract_fields_from_modules(modules)
 
@@ -83,12 +83,12 @@ def extract_fields_from_modules(modules):
         lines, module_info = find_one_line_fields(lines, simple_fields, module_info)
 
         get_requirements(module, module_info)
-        get_components(module, module_info)
+        # get_components(module, module_info)
 
         # print(module_info)
         if module_info:  
             results.append(module_info)
-        
+
     return results
 
 def find_one_line_fields(lines, keywords, module_info):
@@ -111,13 +111,10 @@ def get_requirements(module, module_info):
                 if keyword in prerequisites:
                     prerequisites = prerequisites.split(keyword)[0].strip()
                     break
-                
+
             module_info["Prerequisites"] = prerequisites
             break
 
-
-def get_components(module, module_info):
-    pass
 
 if __name__ == "__main__":
     txt_directory = "data/text"
