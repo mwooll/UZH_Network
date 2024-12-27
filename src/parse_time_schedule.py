@@ -31,40 +31,50 @@ def extract_event_data(text):
 
         # Extract the first date and time if present
         if time_matches:
-            first_date, start_time, _ = time_matches[0]  # Use the first match
+            first_date, start_time, end_time = time_matches[0]  # Use the first match
+
             # Convert date to weekday
             weekday = datetime.strptime(first_date, "%b %d, %Y").strftime("%A")
+
+            # Parse start and end time to integers for hour comparison
+            start_time = int(start_time.split(":")[0])
+            end_time = int(end_time.split(":")[0])
+
             # Classify daytime
-            hour = int(start_time.split(":")[0])
-            if 6 <= hour < 12:
+            if 6 <= start_time < 12:
                 daytime = "Morning"
-            elif 12 <= hour < 18:
+            elif 12 <= start_time < 18:
                 daytime = "Afternoon"
             else:
                 daytime = "Evening"
         else:
             weekday = "N/A"
             daytime = "N/A"
+            start_time = "N/A"
+            end_time = "N/A"
 
-        # Extract and clean up other data
+        # Add extracted fields
         event_name = event_name_match.group(1).strip() if event_name_match else "N/A"
         event_code = event_code_match.group(1).strip() if event_code_match else "N/A"
         event_type = event_type_match.group(1).strip() if event_type_match else "N/A"
-        instructors = instructor_match.group(1).replace("\n", ", ").strip() if instructor_match else "N/A"
+        instructor = instructor_match.group(1).strip().replace("\n", ", ") if instructor_match else "N/A"
         languages = languages_match.group(1).strip() if languages_match else "N/A"
         component_of_module = component_of_module_match.group(1).strip() if component_of_module_match else "N/A"
 
-        # Append the data to the list
+        # Append the data
         events.append({
             "Event Name": event_name,
             "Event Code": event_code,
             "Event Type": event_type,
-            "Instructor": instructors,
+            "Instructor": instructor,
             "Course Languages": languages,
             "Component of Module": component_of_module,
             "Weekday": weekday,
-            "Daytime": daytime
+            "Daytime": daytime,
+            "Start Time": start_time,
+            "End Time": end_time
         })
+
 
     return events
 
