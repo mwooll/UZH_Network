@@ -25,7 +25,7 @@ def parse_modules(txt_dir):
         for file in files:
             # search for the right files
             if "modules" in file:
-                txt_file = path + "/" + file 
+                txt_file = path + "/" + file
                 csv_file = txt_file.replace("text", "csv").replace(".txt", ".csv")
                 # skip files which have already been converted to csv
                 # if not os.path.isfile(csv_file):
@@ -37,10 +37,11 @@ def parse_modules(txt_dir):
 def convert_txt_to_csv(txt_file, csv_file):
     text = Path(txt_file).read_text()
 
-    # a new module always starts with "Course Catalog Fall Semester 2024", the very first entry is empty
-    modules = text.split("Course Catalog Fall Semester 2024")[1:]
+    # a new module always starts with "Course Catalog", the very first entry is empty
+    modules = text.split("Course Catalog")[1:]
 
     data = extract_fields_from_modules(modules)
+    # print(data)
 
     # need utf-16 for "üöä" not included in utf-8
     with open(csv_file, mode="w", newline="", encoding="utf-16") as file:
@@ -82,13 +83,13 @@ def extract_fields_from_modules(modules):
                          "Booking Deadline/Period", "Cancellation Deadline"]
         lines, module_info = find_one_line_fields(lines, simple_fields, module_info)
 
-        get_requirements(module, module_info)
-        # get_components(module, module_info)
+        module_info = get_requirements(module, module_info)
 
         # print(module_info)
         if module_info:  
             results.append(module_info)
 
+    print(results)
     return results
 
 def find_one_line_fields(lines, keywords, module_info):
@@ -114,6 +115,7 @@ def get_requirements(module, module_info):
 
             module_info["Prerequisites"] = prerequisites
             break
+    return module_info
 
 
 if __name__ == "__main__":
