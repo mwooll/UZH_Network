@@ -9,6 +9,8 @@ def create_graph(csv_dir):
 
     store_file = "data/giant_graph.gml"
     nx.write_gml(G, store_file)
+
+    print(f"Created VVZ graph with {len(G.nodes())} nodes and {len(G.edges())} edges.")
     return G
     
 
@@ -71,6 +73,3 @@ def read_file(file_name):
 
 if __name__ == "__main__":
     G = create_graph("data/csv")
-    print("Graph created and stored")
-    # print(semesters_in_graph)
-    # print(G.nodes())
