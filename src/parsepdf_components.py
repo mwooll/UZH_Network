@@ -8,7 +8,7 @@ def extract_module_components(source_dir, print_dir):
 
     new_files = []
     for semester in semesters:
-        print(semester)
+        # print(semester)
         degrees = get_degrees(print_dir, semester)
         pdf_file = f"{source_dir}/{semester}/VVZ_{semester}_modules.pdf"
         out_file = f"{print_dir}/{semester}/VVZ_{semester}_module_components.csv"
@@ -92,7 +92,7 @@ def get_components(pages, degrees):
                         data = span['spans']
                         for lines in data:
                             if lines["text"][:8] == "Courses:":
-                                component_string = ";".join(set(components))
+                                component_string = ";;".join(set(components))
                                 return component_string
                             elif lines["text"] in "Empty":
                                 continue
