@@ -7,7 +7,7 @@ def create_graph(csv_dir):
     for semester in ["HS24", "FS24", "HS23", "FS23"]:
         G = add_semester_to_graph(G, csv_dir, semester)
 
-    store_file = "data/giant_graph.gml"
+    store_file = "data/VVZ_network.gml"
     nx.write_gml(G, store_file)
 
     print(f"Created VVZ graph with {len(G.nodes())} nodes and {len(G.edges())} edges.")
@@ -85,9 +85,9 @@ def read_file(file_name):
 if __name__ == "__main__":
     G = create_graph("data/csv")
 
-    import networkx as nx
-    G = nx.read_gml("data/giant_graph.gml")
+    # import networkx as nx
+    H = nx.read_gml("data/VVZ_network.gml")
+    print(H.nodes(data=True)["Analysis II"])
     # for node in G.nodes(data=True):
     #     print(node)
-    #     print(node["type"])
     
