@@ -1,3 +1,4 @@
+import math
 import networkx as nx
 import pandas as pd
 
@@ -6,6 +7,15 @@ def create_graph(csv_dir):
 
     for semester in ["HS24", "FS24", "HS23", "FS23"]:
         G = add_semester_to_graph(G, csv_dir, semester)
+
+    # there is a single node with the name 'nan' which
+    # is an artifact due to some edges having to target
+    nan_nodes = []
+    for node in G.nodes():
+        if not isinstance(node, str):
+            if math.isnan(node):
+                nan_nodes.append(node)
+    G.remove_nodes_from(nan_nodes)
 
     store_file = "data/VVZ_network.gml"
     nx.write_gml(G, store_file)
@@ -30,15 +40,16 @@ def add_programs(G, file_path):
     programs_df = read_file(file_path)
 
     G.add_nodes_from(programs_df["Program"], type="Study Program")
-    G.add_nodes_from(programs_df["Organization"], type="Faculty")
+    G.add_nodes_from(programs_df["Organization"], type="Organization")
 
     H = nx.from_pandas_edgelist(programs_df, "Program", "Organization")
     G.update(H)
 
     for index, program in programs_df.iterrows():
-        for part_of in program["Part Of"].split(";"):
-            G.add_node(part_of, type="Degree")
-            G.add_edge(program["Program"], part_of)
+        if program["Part Of"]:
+            for part_of in program["Part Of"].split(";"):
+                G.add_node(part_of, type="Degree")
+                G.add_edge(program["Program"], part_of)
         
     return G
 
@@ -65,13 +76,16 @@ def add_time_schedules(G, file_path):
     schedules_df = read_file(file_path)
 
     G.add_nodes_from(schedules_df["Event Name"], type="Event")
-    G.add_nodes_from(schedules_df["Instructor"], type="Instructor")
 
-    H = nx.from_pandas_edgelist(schedules_df, "Event Name", "Instructor")
-    I = nx.from_pandas_edgelist(schedules_df, "Event Name", "Component of Module")
-    H.update(I)
-
+    H = nx.from_pandas_edgelist(schedules_df, "Event Name", "Component of Module")
     G.update(H)
+
+    for index, event in schedules_df.iterrows():
+        if isinstance(event["Instructor"], str):
+            for instructor in event["Instructor"].split(","):
+                G.add_node(instructor, type="Instructor")
+                G.add_edge(event["Event Name"], instructor)
+    
     return G
 
 def read_file(file_name):
@@ -84,10 +98,5 @@ def read_file(file_name):
 
 if __name__ == "__main__":
     G = create_graph("data/csv")
-
-    # import networkx as nx
-    H = nx.read_gml("data/VVZ_network.gml")
-    print(H.nodes(data=True)["Analysis II"])
-    # for node in G.nodes(data=True):
-    #     print(node)
+    print(sorted(G.degree, key=lambda x: x[1], reverse=True)[:10])
     
